@@ -1,0 +1,59 @@
+server:
+  port: 8080
+  mode: debug # debug, release, test
+
+database:
+  host: localhost
+  port: 3306
+  username: root
+  password: ""
+  dbname: go_market_email
+  charset: utf8mb4
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_lifetime: 3600
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 10
+
+smtp:
+  host: smtp.partner.outlook.cn
+  port: 587
+  username: ""
+  password: ""
+  from_name: "AI Marketing"
+
+ai:
+  openai:
+    api_key: ""
+    model: "gpt-4"
+    base_url: "https://api.openai.com/v1"
+  custom_api:
+    url: ""
+    headers: {}
+
+email:
+  batch_size: 25
+  send_interval: 60 # seconds
+  retry_times: 2
+  template_size_limit: 52428800 # 50MB
+
+scheduler:
+  check_interval: 60 # seconds
+  max_workers: 5
+
+log:
+  level: info
+  retention_days: 7
+  file_path: "./logs/app.log"
+
+auth:
+  token: "your-secret-token"
+
+webhook:
+  url: ""
+  timeout: 30
