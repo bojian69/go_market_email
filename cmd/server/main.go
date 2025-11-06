@@ -63,19 +63,65 @@ func main() {
 	api := r.Group("/api/v1")
 	api.Use(middleware.AuthMiddleware(config.Auth))
 	
+	// 创建处理器
+	statsHandler := handlers.NewStatsHandler(db, rdb, logger, emailService)
+	dataHandler := handlers.NewDataHandler(dataService)
+	aiHandler := handlers.NewAIHandler(aiService)
+	
 	// 模板路由
 	templates := api.Group("/templates")
 	{
 		templates.POST("", templateHandler.CreateTemplate)
 		templates.GET("/:id", templateHandler.GetTemplate)
+		templates.GET("", templateHandler.ListTemplates)
+		templates.PUT("/:id", templateHandler.UpdateTemplate)
+		templates.DELETE("/:id", templateHandler.DeleteTemplate)
+		templates.POST("/extract-variables", templateHandler.ExtractVariables)
+		templates.POST("/preview", templateHandler.PreviewTemplate)
 	}
 	
 	// 邮件路由
 	emails := api.Group("/emails")
 	{
 		emails.POST("/test", emailHandler.SendTestEmail)
-		emails.POST("/tasks", emailHandler.CreateEmailTask)
 	}
+	
+	// 任务路由
+	tasks := api.Group("/tasks")
+	{
+		tasks.POST("", emailHandler.CreateEmailTask)
+		tasks.GET("", emailHandler.ListTasks)
+		tasks.GET("/running", statsHandler.GetRunningTasks)
+		tasks.GET("/:id/logs", emailHandler.GetTaskLogs)
+		tasks.POST("/:id/start", emailHandler.StartTask)
+		tasks.POST("/:id/pause", statsHandler.PauseTask)
+		tasks.POST("/:id/resume", statsHandler.ResumeTask)
+		tasks.DELETE("/:id", emailHandler.DeleteTask)
+	}
+	
+	// 数据路由
+	data := api.Group("/data")
+	{
+		data.POST("/upload", dataHandler.UploadFile)
+		data.POST("/sql", dataHandler.ExecuteSQL)
+		data.POST("/save", dataHandler.SaveManualData)
+	}
+	
+	// AI路由
+	ai := api.Group("/ai")
+	{
+		ai.POST("/generate", aiHandler.GenerateContent)
+		ai.POST("/extract-variables", aiHandler.ExtractPromptVariables)
+	}
+	
+	// 统计路由
+	stats := api.Group("/stats")
+	{
+		stats.GET("", statsHandler.GetStats)
+	}
+	
+	// WebSocket路由
+	r.GET("/ws/stats", statsHandler.WebSocketStats)
 	
 	// 启动服务器
 	logger.Info("服务器启动", logger.String("port", config.Server.Port))
