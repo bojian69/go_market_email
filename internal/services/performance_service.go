@@ -183,7 +183,8 @@ func (bp *BatchProcessor) flushLocked() error {
 // Close 关闭批处理器
 func (bp *BatchProcessor) Close() error {
 	bp.timer.Stop()
-	return bp.flush()
+	bp.flush()
+	return nil
 }
 
 // CacheManager 缓存管理器

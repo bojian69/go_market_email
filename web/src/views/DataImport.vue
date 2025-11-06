@@ -12,6 +12,7 @@
           :on-error="handleUploadError"
           :before-upload="beforeUpload"
           accept=".xlsx,.xls,.csv"
+          name="file"
         >
           <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
           <div class="el-upload__text">
@@ -160,8 +161,16 @@ const tasks = ref([])
 
 // Excel上传
 const uploadUrl = '/api/v1/data/upload'
-const uploadHeaders = {
-  Authorization: `Bearer ${localStorage.getItem('token')}`
+const uploadHeaders = ref({})
+
+// 更新上传头部
+const updateUploadHeaders = () => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    uploadHeaders.value = {
+      Authorization: `Bearer ${token}`
+    }
+  }
 }
 
 // SQL查询
@@ -302,6 +311,7 @@ const loadTasks = async () => {
 }
 
 onMounted(() => {
+  updateUploadHeaders()
   loadTasks()
 })
 </script>

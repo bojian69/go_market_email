@@ -2,6 +2,98 @@
 
 基于Go、Vue 3和AI的智能邮件营销系统，支持模板管理、数据导入、AI内容生成和批量发送。
 
+## 🎯 核心功能页面
+
+### 📧 **邮件模板管理**
+- **模板列表页面** - 查看所有邮件模板
+- **模板创建/编辑** - 富文本编辑器，支持变量插入
+- **模板预览** - 实时预览邮件效果
+- **版本管理** - 模板版本控制和历史记录
+- **变量提取** - 自动识别 `{{变量名}}` 格式
+
+### 📊 **数据导入管理**
+- **Excel导入** - 支持 .xlsx, .csv 格式文件上传
+- **SQL查询** - 在线执行数据库查询
+- **手动输入** - 可视化表格数据录入
+- **数据预览** - 导入数据实时预览和验证
+
+### 🚀 **发送任务管理**
+- **任务创建** - 关联模板和数据源
+- **任务列表** - 查看所有发送任务状态
+- **任务控制** - 启动/暂停/恢复/删除任务
+- **发送日志** - 详细的邮件发送记录
+- **进度监控** - 实时显示发送进度
+
+### 📈 **实时监控面板**
+- **统计概览** - 模板数量、发送统计等
+- **可视化图表** - ECharts数据图表展示
+- **实时任务** - WebSocket实时更新任务状态
+- **性能监控** - 发送速度、成功率等指标
+
+### 🤖 **AI内容生成**
+- **AI提示词编辑** - 支持变量的智能提示词
+- **内容生成预览** - 实时预览AI生成结果
+- **多AI服务** - OpenAI GPT-4 和自定义API
+
+### 🔧 **系统管理**
+- **邮件测试** - 单封邮件测试发送
+- **令牌设置** - 认证令牌配置页面
+- **系统配置** - 环境变量和配置管理
+
+## 🌐 API路由列表
+
+### 模板管理 API
+```
+POST   /api/v1/templates                    # 创建模板
+GET    /api/v1/templates                    # 获取模板列表
+GET    /api/v1/templates/:id                # 获取单个模板
+PUT    /api/v1/templates/:id                # 更新模板
+DELETE /api/v1/templates/:id                # 删除模板
+POST   /api/v1/templates/extract-variables  # 提取模板变量
+POST   /api/v1/templates/preview            # 预览模板
+```
+
+### 邮件发送 API
+```
+POST   /api/v1/emails/test                  # 测试发送邮件
+```
+
+### 任务管理 API
+```
+POST   /api/v1/tasks                        # 创建发送任务
+GET    /api/v1/tasks                        # 获取任务列表
+GET    /api/v1/tasks/running                # 获取运行中任务
+GET    /api/v1/tasks/:id/logs               # 获取任务日志
+POST   /api/v1/tasks/:id/start              # 启动任务
+POST   /api/v1/tasks/:id/pause              # 暂停任务
+POST   /api/v1/tasks/:id/resume             # 恢复任务
+DELETE /api/v1/tasks/:id                   # 删除任务
+```
+
+### 数据管理 API
+```
+POST   /api/v1/data/upload                  # 上传文件
+POST   /api/v1/data/sql                     # 执行SQL查询
+POST   /api/v1/data/save                    # 保存手动数据
+```
+
+### AI服务 API
+```
+POST   /api/v1/ai/generate                  # 生成AI内容
+POST   /api/v1/ai/extract-variables         # 提取提示词变量
+```
+
+### 统计监控 API
+```
+GET    /api/v1/stats                        # 获取统计数据
+GET    /ws/stats                            # WebSocket实时统计
+```
+
+### 系统 API
+```
+GET    /health                              # 健康检查
+```
+
 ## 功能特性
 
 - 📧 **邮件模板管理**：支持变量提取、版本控制

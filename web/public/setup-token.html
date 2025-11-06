@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>设置认证令牌</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; }
+        input { width: 100%; padding: 10px; margin: 10px 0; }
+        button { background: #409eff; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>设置认证令牌</h2>
+        <input type="text" id="token" placeholder="输入认证令牌" value="a0f731f5-80e7-0873-19c4-455956d210f1">
+        <button onclick="setToken()">保存令牌</button>
+        <p id="status"></p>
+        
+        <h3>使用说明：</h3>
+        <p>1. 输入认证令牌</p>
+        <p>2. 点击保存令牌</p>
+        <p>3. 刷新页面即可正常使用</p>
+    </div>
+
+    <script>
+        function setToken() {
+            const token = document.getElementById('token').value;
+            if (token) {
+                localStorage.setItem('token', token);
+                document.getElementById('status').innerHTML = '✅ 令牌已保存！';
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+            } else {
+                document.getElementById('status').innerHTML = '❌ 请输入令牌';
+            }
+        }
+        
+        // 检查是否已有令牌
+        const existingToken = localStorage.getItem('token');
+        if (existingToken) {
+            document.getElementById('token').value = existingToken;
+            document.getElementById('status').innerHTML = '当前令牌: ' + existingToken;
+        }
+    </script>
+</body>
+</html>

@@ -19,7 +19,7 @@ import (
 )
 
 type EmailService struct {
-	db     *gorm.DB
+	DB     *gorm.DB
 	rdb    *redis.Client
 	config utils.Config
 	logger *zap.Logger
@@ -27,7 +27,7 @@ type EmailService struct {
 
 func NewEmailService(db *gorm.DB, rdb *redis.Client, config utils.Config, logger *zap.Logger) *EmailService {
 	return &EmailService{
-		db:     db,
+		DB:     db,
 		rdb:    rdb,
 		config: config,
 		logger: logger,
@@ -93,19 +93,19 @@ func (s *EmailService) ProcessEmailTask(taskID uint) error {
 	
 	// 获取任务信息
 	var task models.EmailTask
-	if err := s.db.Preload("Template").First(&task, taskID).Error; err != nil {
+	if err := s.DB.Preload("Template").First(&task, taskID).Error; err != nil {
 		return err
 	}
 	
 	// 更新任务状态
 	now := time.Now()
-	s.db.Model(&task).Updates(map[string]interface{}{
+	s.DB.Model(&task).Updates(map[string]interface{}{
 		"status":     "running",
 		"started_at": &now,
 	})
 	
 	// 获取数据
-	dataService := NewDataService(s.db, s.rdb)
+	dataService := NewDataService(s.DB, s.rdb)
 	data, err := dataService.GetTaskData(taskID)
 	if err != nil {
 		s.updateTaskStatus(taskID, "failed", err.Error())
@@ -138,7 +138,7 @@ func (s *EmailService) ProcessEmailTask(taskID uint) error {
 	
 	// 更新任务完成状态
 	completedAt := time.Now()
-	s.db.Model(&task).Updates(map[string]interface{}{
+	s.DB.Model(&task).Updates(map[string]interface{}{
 		"status":       "completed",
 		"completed_at": &completedAt,
 	})
@@ -151,7 +151,7 @@ func (s *EmailService) ProcessEmailTask(taskID uint) error {
 
 // processBatch 处理批量邮件
 func (s *EmailService) processBatch(task models.EmailTask, batch []map[string]interface{}, aiService *AIService) {
-	templateService := NewTemplateService(s.db)
+	templateService := NewTemplateService(s.DB)
 	
 	for _, record := range batch {
 		// 检查是否有邮箱字段
@@ -218,7 +218,7 @@ func (s *EmailService) sendEmailWithRetry(to, subject, content string, taskID ui
 			log.SentAt = &now
 		}
 		
-		s.db.Create(&log)
+		s.DB.Create(&log)
 		
 		if err == nil {
 			// 发送成功，更新统计
@@ -244,10 +244,10 @@ func (s *EmailService) sendEmailWithRetry(to, subject, content string, taskID ui
 // updateTaskStats 更新任务统计
 func (s *EmailService) updateTaskStats(taskID uint, success bool) {
 	if success {
-		s.db.Model(&models.EmailTask{}).Where("id = ?", taskID).
+		s.DB.Model(&models.EmailTask{}).Where("id = ?", taskID).
 			Update("sent_count", gorm.Expr("sent_count + 1"))
 	} else {
-		s.db.Model(&models.EmailTask{}).Where("id = ?", taskID).
+		s.DB.Model(&models.EmailTask{}).Where("id = ?", taskID).
 			Update("fail_count", gorm.Expr("fail_count + 1"))
 	}
 }
@@ -258,7 +258,7 @@ func (s *EmailService) updateTaskStatus(taskID uint, status, errorMsg string) {
 	if errorMsg != "" {
 		updates["error"] = errorMsg
 	}
-	s.db.Model(&models.EmailTask{}).Where("id = ?", taskID).Updates(updates)
+	s.DB.Model(&models.EmailTask{}).Where("id = ?", taskID).Updates(updates)
 }
 
 // PauseTask 暂停任务
@@ -312,7 +312,7 @@ func (s *EmailService) sendWebhook(taskID uint, recipient, status, error string)
 // GetTaskStats 获取任务统计
 func (s *EmailService) GetTaskStats(taskID uint) (map[string]interface{}, error) {
 	var task models.EmailTask
-	if err := s.db.First(&task, taskID).Error; err != nil {
+	if err := s.DB.First(&task, taskID).Error; err != nil {
 		return nil, err
 	}
 	

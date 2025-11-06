@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go_market_email/internal/services"
@@ -24,11 +26,18 @@ func (h *DataHandler) UploadFile(c *gin.Context) {
 		return
 	}
 
-	taskIDStr := c.PostForm("task_id")
-	taskID, err := strconv.ParseUint(taskIDStr, 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的任务ID"})
+	// 检查文件大小 (50MB)
+	if file.Size > 50*1024*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "文件大小不能超过50MB"})
 		return
+	}
+
+	// 生成临时任务ID
+	taskID := uint(1)
+	if taskIDStr := c.PostForm("task_id"); taskIDStr != "" {
+		if id, err := strconv.ParseUint(taskIDStr, 10, 32); err == nil {
+			taskID = uint(id)
+		}
 	}
 
 	// 保存文件到临时目录
@@ -38,17 +47,24 @@ func (h *DataHandler) UploadFile(c *gin.Context) {
 		return
 	}
 
-	// 根据文件类型处理
+	// 根据文件扩展名处理
 	var data []map[string]interface{}
-	if file.Header.Get("Content-Type") == "text/csv" {
-		// 处理CSV文件
-		content := ""
-		// 读取文件内容...
-		data, err = h.dataService.ImportCSVData(content, uint(taskID))
+	filename := strings.ToLower(file.Filename)
+	if strings.HasSuffix(filename, ".csv") {
+		// 读取CSV文件内容
+		content, err := os.ReadFile(tempPath)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "读取文件失败"})
+			return
+		}
+		data, err = h.dataService.ImportCSVData(string(content), taskID)
 	} else {
 		// 处理Excel文件
-		data, err = h.dataService.ImportExcelData(tempPath, uint(taskID))
+		data, err = h.dataService.ImportExcelData(tempPath, taskID)
 	}
+
+	// 清理临时文件
+	os.Remove(tempPath)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

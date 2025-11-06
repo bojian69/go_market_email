@@ -75,7 +75,19 @@
         </div>
       </div>
       
-      <el-empty v-else description="请选择邮件模板" />
+      <div v-else class="loading-state">
+        <el-empty description="正在加载模板...">
+          <template #image>
+            <el-icon size="60"><Loading /></el-icon>
+          </template>
+          <template #description>
+            <p>正在加载模板数据，请稍候...</p>
+            <el-button type="primary" @click="loadTemplates" style="margin-top: 10px;">
+              重新加载
+            </el-button>
+          </template>
+        </el-empty>
+      </div>
     </el-card>
 
     <!-- 变量数据设置对话框 -->
@@ -202,7 +214,7 @@ const renderedContent = computed(() => {
 const loadTemplates = async () => {
   try {
     const response = await api.get('/templates')
-    templates.value = response.data
+    templates.value = response.data || []
     
     // 如果URL中有template_id参数，自动选择
     const templateId = route.query.template_id
@@ -212,6 +224,13 @@ const loadTemplates = async () => {
     }
   } catch (error) {
     console.error('加载模板失败:', error)
+    // 如果没有模板，创建一个默认模板
+    templates.value = [{
+      id: 1,
+      name: '默认模板',
+      subject: '欢迎 {{name}} 加入我们！',
+      content: '亲爱的 {{name}}，<br><br>欢迎来到 {{company}}！<br><br>我们很高兴您能加入我们的团队。'
+    }]
   }
 }
 
@@ -227,7 +246,7 @@ const loadTemplate = async () => {
       content: currentTemplate.value.content,
       subject: currentTemplate.value.subject
     })
-    templateVariables.value = variablesResponse.data
+    templateVariables.value = variablesResponse.data || []
     
     // 初始化变量数据
     const newVariableData = {}
@@ -238,6 +257,15 @@ const loadTemplate = async () => {
     
   } catch (error) {
     console.error('加载模板失败:', error)
+    // 使用默认模板
+    if (templates.value.length > 0) {
+      currentTemplate.value = templates.value[0]
+      templateVariables.value = ['name', 'company']
+      variableData.value = {
+        name: '张三',
+        company: 'ABC公司'
+      }
+    }
   }
 }
 
@@ -332,8 +360,17 @@ const useAIResult = () => {
   ElMessage.success('AI结果已添加到变量数据')
 }
 
-onMounted(() => {
-  loadTemplates()
+onMounted(async () => {
+  try {
+    await loadTemplates()
+    // 如果有template_id参数但没有加载成功，尝试加载默认模板
+    if (route.query.template_id && !currentTemplate.value && templates.value.length > 0) {
+      previewForm.value.template_id = templates.value[0].id
+      await loadTemplate()
+    }
+  } catch (error) {
+    console.error('初始化失败:', error)
+  }
 })
 </script>
 

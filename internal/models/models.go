@@ -23,26 +23,28 @@ type EmailTemplate struct {
 
 // EmailTask 邮件发送任务
 type EmailTask struct {
-	ID          uint           `json:"id" gorm:"primaryKey"`
-	Name        string         `json:"name" gorm:"size:255;not null"`
-	TemplateID  uint           `json:"template_id"`
-	Template    EmailTemplate  `json:"template" gorm:"foreignKey:TemplateID"`
-	DataSource  string         `json:"data_source"` // excel, sql, manual
-	DataContent string         `json:"data_content" gorm:"type:text"`
-	AIPrompt    string         `json:"ai_prompt" gorm:"type:text"`
-	Recipients  string         `json:"recipients" gorm:"type:json"` // JSON格式存储收件人列表
-	Status      string         `json:"status" gorm:"default:'pending'"` // pending, running, completed, failed, paused
-	TotalCount  int            `json:"total_count" gorm:"default:0"`
-	SentCount   int            `json:"sent_count" gorm:"default:0"`
-	FailCount   int            `json:"fail_count" gorm:"default:0"`
-	UserID      uint           `json:"user_id"`
-	ProjectID   uint           `json:"project_id"`
-	ScheduledAt *time.Time     `json:"scheduled_at"`
-	StartedAt   *time.Time     `json:"started_at"`
-	CompletedAt *time.Time     `json:"completed_at"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `json:"deleted_at" gorm:"index"`
+	ID                 uint           `json:"id" gorm:"primaryKey"`
+	Name               string         `json:"name" gorm:"size:255;not null"`
+	TemplateID         uint           `json:"template_id"`
+	Template           EmailTemplate  `json:"template" gorm:"foreignKey:TemplateID"`
+	DataSource         string         `json:"data_source"` // excel, sql, manual
+	DataContent        string         `json:"data_content" gorm:"type:text"`
+	AIPrompt           string         `json:"ai_prompt" gorm:"type:text"`
+	Recipients         string         `json:"recipients" gorm:"type:json;default:'[]'"` // JSON格式存储收件人列表
+	Status             string         `json:"status" gorm:"default:'pending'"` // pending, running, completed, failed, paused
+	TotalCount         int            `json:"total_count" gorm:"default:0"`
+	SentCount          int            `json:"sent_count" gorm:"default:0"`
+	FailCount          int            `json:"fail_count" gorm:"default:0"`
+	Progress           float64        `json:"progress" gorm:"-"` // 计算字段，不存储到数据库
+	EstimatedRemaining string         `json:"estimated_remaining" gorm:"-"` // 计算字段
+	UserID             uint           `json:"user_id"`
+	ProjectID          uint           `json:"project_id"`
+	ScheduledAt        *time.Time     `json:"scheduled_at"`
+	StartedAt          *time.Time     `json:"started_at"`
+	CompletedAt        *time.Time     `json:"completed_at"`
+	CreatedAt          time.Time      `json:"created_at"`
+	UpdatedAt          time.Time      `json:"updated_at"`
+	DeletedAt          gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 }
 
 // EmailLog 邮件发送日志

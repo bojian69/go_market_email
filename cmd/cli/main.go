@@ -9,6 +9,7 @@ import (
 	"time"
 	
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 	"go_market_email/internal/services"
 	"go_market_email/internal/utils"
 )
@@ -76,11 +77,11 @@ func runWorker(cmd *cobra.Command, args []string) {
 			for {
 				select {
 				case <-ctx.Done():
-					logger.Info("工作进程停止", logger.Int("workerID", workerID))
+					logger.Info("工作进程停止", zap.Int("workerID", workerID))
 					return
 				case <-ticker.C:
 					if err := emailService.ProcessEmailQueue(); err != nil {
-						logger.Error("处理邮件队列失败", logger.Error(err))
+						logger.Error("处理邮件队列失败", zap.Error(err))
 					}
 				}
 			}

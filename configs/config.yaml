@@ -52,7 +52,7 @@ log:
   file_path: "./logs/app.log"
 
 auth:
-  token: "your-secret-token"
+  token: "a0f731f5-80e7-0873-19c4-455956d210f1"
 
 webhook:
   url: ""

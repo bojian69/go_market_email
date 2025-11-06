@@ -7,7 +7,7 @@
       </div>
       
       <el-menu
-        :default-active="$route.path"
+        :default-active="currentPath"
         router
         class="sidebar-menu"
         :collapse="false"
@@ -15,7 +15,7 @@
         <el-menu-item
           v-for="route in menuRoutes"
           :key="route.path"
-          :index="route.path"
+          :index="'/dashboard/' + route.path"
         >
           <el-icon><component :is="route.meta.icon" /></el-icon>
           <span>{{ route.meta.title }}</span>
@@ -27,6 +27,10 @@
       <el-header class="header">
         <div class="header-left">
           <h2>{{ currentTitle }}</h2>
+          <el-breadcrumb separator="/" style="margin-top: 8px;">
+            <el-breadcrumb-item>AI邮件营销系统</el-breadcrumb-item>
+            <el-breadcrumb-item>{{ currentTitle }}</el-breadcrumb-item>
+          </el-breadcrumb>
         </div>
         <div class="header-right">
           <el-button @click="toggleTheme" circle>
@@ -59,11 +63,16 @@ const route = useRoute()
 const router = useRouter()
 
 const menuRoutes = computed(() => {
-  return router.getRoutes()[0].children || []
+  const dashboardRoute = router.getRoutes().find(route => route.path === '/dashboard')
+  return dashboardRoute?.children || []
 })
 
 const currentTitle = computed(() => {
   return route.meta?.title || '监控面板'
+})
+
+const currentPath = computed(() => {
+  return route.path
 })
 
 const toggleTheme = () => {

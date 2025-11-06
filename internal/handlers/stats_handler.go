@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +12,6 @@ import (
 	"go.uber.org/zap"
 	"go_market_email/internal/models"
 	"go_market_email/internal/services"
-	"go_market_email/internal/utils"
 	"gorm.io/gorm"
 )
 

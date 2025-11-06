@@ -8,6 +8,7 @@ import (
 	"go_market_email/internal/utils"
 	
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -124,7 +125,7 @@ func main() {
 	r.GET("/ws/stats", statsHandler.WebSocketStats)
 	
 	// 启动服务器
-	logger.Info("服务器启动", logger.String("port", config.Server.Port))
+	logger.Info("服务器启动", zap.String("port", config.Server.Port))
 	if err := r.Run(":" + config.Server.Port); err != nil {
 		log.Fatal("启动服务器失败:", err)
 	}

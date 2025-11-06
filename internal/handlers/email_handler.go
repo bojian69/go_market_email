@@ -76,7 +76,7 @@ func (h *EmailHandler) CreateEmailTask(c *gin.Context) {
 		task.TotalCount = len(data)
 	}
 	
-	if err := h.emailService.db.Create(&task).Error; err != nil {
+	if err := h.emailService.DB.Create(&task).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -91,7 +91,7 @@ func (h *EmailHandler) ListTasks(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
 	
-	query := h.emailService.db.Model(&models.EmailTask{}).Where("user_id = ?", userID)
+	query := h.emailService.DB.Model(&models.EmailTask{}).Where("user_id = ?", userID)
 	if status != "" {
 		query = query.Where("status = ?", status)
 	}
@@ -126,7 +126,7 @@ func (h *EmailHandler) GetTaskLogs(c *gin.Context) {
 	}
 	
 	var logs []models.EmailLog
-	err = h.emailService.db.Where("task_id = ?", taskID).
+	err = h.emailService.DB.Where("task_id = ?", taskID).
 		Order("created_at DESC").Limit(100).Find(&logs).Error
 	
 	if err != nil {
@@ -146,7 +146,7 @@ func (h *EmailHandler) StartTask(c *gin.Context) {
 	}
 	
 	// 更新任务状态
-	h.emailService.db.Model(&models.EmailTask{}).Where("id = ?", taskID).Update("status", "pending")
+	h.emailService.DB.Model(&models.EmailTask{}).Where("id = ?", taskID).Update("status", "pending")
 	
 	// 加入队列
 	if err := h.emailService.QueueEmailTask(uint(taskID)); err != nil {
@@ -169,7 +169,7 @@ func (h *EmailHandler) DeleteTask(c *gin.Context) {
 	h.dataService.DeleteTaskData(uint(taskID))
 	
 	// 删除任务
-	if err := h.emailService.db.Delete(&models.EmailTask{}, taskID).Error; err != nil {
+	if err := h.emailService.DB.Delete(&models.EmailTask{}, taskID).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

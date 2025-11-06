@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"go_market_email/internal/models"
 	"gorm.io/gorm"
 )
 
