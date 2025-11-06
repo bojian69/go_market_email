@@ -115,7 +115,7 @@ func LoadConfig(configPath string) (*Config, error) {
 		return nil, err
 	}
 	
-	// 环境变量覆盖敏感配置
+	// 环境变量覆盖配置
 	if token := os.Getenv("GME_AUTH_TOKEN"); token != "" {
 		config.Auth.Token = token
 	}
@@ -125,8 +125,14 @@ func LoadConfig(configPath string) (*Config, error) {
 	if redisPassword := os.Getenv("GME_REDIS_PASSWORD"); redisPassword != "" {
 		config.Redis.Password = redisPassword
 	}
+	if smtpUsername := os.Getenv("GME_SMTP_USERNAME"); smtpUsername != "" {
+		config.SMTP.Username = smtpUsername
+	}
 	if smtpPassword := os.Getenv("GME_SMTP_PASSWORD"); smtpPassword != "" {
 		config.SMTP.Password = smtpPassword
+	}
+	if smtpFromName := os.Getenv("GME_SMTP_FROM_NAME"); smtpFromName != "" {
+		config.SMTP.FromName = smtpFromName
 	}
 	if apiKey := os.Getenv("GME_AI_OPENAI_API_KEY"); apiKey != "" {
 		config.AI.OpenAI.APIKey = apiKey

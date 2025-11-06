@@ -70,10 +70,12 @@ func (h *EmailHandler) CreateEmailTask(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	task.UserID = userID.(uint)
 	
-	// 获取数据并设置总数
-	data, err := h.dataService.GetTaskData(task.ID)
-	if err == nil {
-		task.TotalCount = len(data)
+	// 初始化JSON字段
+	if task.Recipients == "" {
+		task.Recipients = "[]"
+	}
+	if task.DataContent == "" {
+		task.DataContent = ""
 	}
 	
 	if err := h.emailService.DB.Create(&task).Error; err != nil {

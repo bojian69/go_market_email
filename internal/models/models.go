@@ -30,7 +30,7 @@ type EmailTask struct {
 	DataSource         string         `json:"data_source"` // excel, sql, manual
 	DataContent        string         `json:"data_content" gorm:"type:text"`
 	AIPrompt           string         `json:"ai_prompt" gorm:"type:text"`
-	Recipients         string         `json:"recipients" gorm:"type:json;default:'[]'"` // JSON格式存储收件人列表
+	Recipients         string         `json:"recipients" gorm:"type:json"` // JSON格式存储收件人列表
 	Status             string         `json:"status" gorm:"default:'pending'"` // pending, running, completed, failed, paused
 	TotalCount         int            `json:"total_count" gorm:"default:0"`
 	SentCount          int            `json:"sent_count" gorm:"default:0"`

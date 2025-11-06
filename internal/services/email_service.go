@@ -36,8 +36,18 @@ func NewEmailService(db *gorm.DB, rdb *redis.Client, config utils.Config, logger
 
 // SendSingleEmail 发送单封邮件
 func (s *EmailService) SendSingleEmail(to, subject, content string) error {
+	// 验证邮件地址格式
+	if to == "" {
+		return fmt.Errorf("收件人邮箱不能为空")
+	}
+	
+	// 验证发件人配置
+	if s.config.SMTP.Username == "" {
+		return fmt.Errorf("SMTP用户名未配置")
+	}
+	
 	e := email.NewEmail()
-	e.From = fmt.Sprintf("%s <%s>", s.config.SMTP.FromName, s.config.SMTP.Username)
+	e.From = s.config.SMTP.Username // 直接使用邮箱地址
 	e.To = []string{to}
 	e.Subject = subject
 	e.HTML = []byte(content)

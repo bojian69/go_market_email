@@ -45,6 +45,11 @@ func (s *TemplateService) CreateTemplate(template *models.EmailTemplate) error {
 	variablesJSON, _ := json.Marshal(variables)
 	template.Variables = string(variablesJSON)
 	
+	// 确保JSON字段不为空
+	if template.Variables == "" {
+		template.Variables = "[]"
+	}
+	
 	// 设置版本号
 	var maxVersion int
 	s.db.Model(&models.EmailTemplate{}).
