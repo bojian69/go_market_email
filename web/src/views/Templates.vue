@@ -234,7 +234,7 @@ const insertVariableToContent = () => {
 
 const previewTemplate = (template: any) => {
   // 跳转到预览页面
-  window.open(`/preview?template_id=${template.id}`, '_blank')
+  window.open(`/dashboard/preview?template_id=${template.id}`, '_blank')
 }
 
 const resetForm = () => {
@@ -266,17 +266,24 @@ onMounted(() => {
 
 <style scoped>
 .templates {
-  padding: 20px;
+  padding: 24px;
+  background: transparent;
 }
 
 .toolbar {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .search-box {
-  width: 300px;
+  width: 320px;
 }
 
 .editor-container {
@@ -284,6 +291,32 @@ onMounted(() => {
 }
 
 .editor-toolbar {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+:deep(.el-table) {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+:deep(.el-pagination) {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 16px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+:deep(.el-button) {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+:deep(.el-button--small) {
+  padding: 6px 12px;
 }
 </style>

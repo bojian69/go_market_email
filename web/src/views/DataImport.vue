@@ -318,39 +318,80 @@ onMounted(() => {
 
 <style scoped>
 .data-import {
-  padding: 20px;
+  padding: 24px;
+  background: transparent;
+}
+
+:deep(.el-tabs__header) {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 12px 12px 0 0;
+  padding: 0 20px;
+  margin-bottom: 0;
+}
+
+:deep(.el-tabs__content) {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 0 0 12px 12px;
+  box-shadow: var(--shadow-md);
+}
+
+:deep(.el-tab-pane) {
+  padding: 24px;
 }
 
 .upload-demo {
-  margin: 20px 0;
+  margin: 24px 0;
+}
+
+:deep(.el-upload-dragger) {
+  border: 2px dashed #c7d2fe;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  transition: all 0.3s ease;
+}
+
+:deep(.el-upload-dragger:hover) {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  transform: translateY(-2px);
 }
 
 .sql-editor {
-  padding: 20px;
+  padding: 0;
 }
 
 .manual-input {
-  padding: 20px;
+  padding: 0;
 }
 
 .toolbar {
   margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
 }
 
 .preview-card {
-  margin-top: 20px;
+  margin-top: 24px;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px);
 }
 
 .preview-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
 }
 
 .preview-tip {
   text-align: center;
-  color: var(--el-text-color-regular);
-  margin-top: 10px;
+  color: #64748b;
+  margin-top: 16px;
+  font-style: italic;
 }
 </style>

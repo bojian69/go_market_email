@@ -80,3 +80,5 @@ coverage.html
 
 # Local development
 .local/
+
+.amazonq

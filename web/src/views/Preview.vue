@@ -2,30 +2,43 @@
   <div class="preview">
     <el-card title="邮件预览">
       <div class="preview-toolbar">
-        <el-form :model="previewForm" :inline="true">
-          <el-form-item label="选择模板">
-            <el-select v-model="previewForm.template_id" @change="loadTemplate">
+        <div class="toolbar-section">
+          <div class="template-selector">
+            <label class="selector-label">选择模板</label>
+            <el-select 
+              v-model="previewForm.template_id" 
+              @change="loadTemplate"
+              placeholder="请选择邮件模板"
+              size="large"
+              class="template-select"
+            >
               <el-option
                 v-for="template in templates"
                 :key="template.id"
                 :label="template.name"
                 :value="template.id"
-              />
+                class="template-option"
+              >
+                <div class="template-option-content">
+                  <div class="template-name">{{ template.name }}</div>
+                  <div class="template-subject">{{ template.subject }}</div>
+                </div>
+              </el-option>
             </el-select>
-          </el-form-item>
+          </div>
           
-          <el-form-item>
-            <el-button type="primary" @click="showDataDialog = true">
+          <div class="action-buttons">
+            <el-button type="primary" @click="showDataDialog = true" size="large">
+              <el-icon><Setting /></el-icon>
               设置变量数据
             </el-button>
-          </el-form-item>
-          
-          <el-form-item>
-            <el-button @click="sendTestEmail" :loading="sending">
+            
+            <el-button @click="sendTestEmail" :loading="sending" size="large">
+              <el-icon><Message /></el-icon>
               发送测试邮件
             </el-button>
-          </el-form-item>
-        </el-form>
+          </div>
+        </div>
       </div>
 
       <div v-if="currentTemplate" class="preview-content">
@@ -112,7 +125,23 @@
           <el-button-group>
             <el-button @click="fillSampleData">示例数据</el-button>
             <el-button @click="clearVariableData">清空数据</el-button>
+            <el-button @click="triggerFileUpload">Excel导入</el-button>
+            <el-button @click="triggerJsonUpload">JSON导入</el-button>
           </el-button-group>
+          <input 
+            ref="fileInput" 
+            type="file" 
+            accept=".xlsx,.xls" 
+            @change="handleFileUpload" 
+            style="display: none"
+          />
+          <input 
+            ref="jsonInput" 
+            type="file" 
+            accept=".json" 
+            @change="handleJsonUpload" 
+            style="display: none"
+          />
         </div>
       </div>
       <el-empty v-else description="当前模板没有变量" />
@@ -170,6 +199,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRoute } from 'vue-router'
+import { Setting, Message } from '@element-plus/icons-vue'
 import api from '@/utils/api'
 
 const route = useRoute()
@@ -184,6 +214,8 @@ const showDataDialog = ref(false)
 const showAIDialog = ref(false)
 const aiLoading = ref(false)
 const aiResult = ref('')
+const fileInput = ref(null)
+const jsonInput = ref(null)
 
 const previewForm = ref({
   template_id: null,
@@ -360,6 +392,82 @@ const useAIResult = () => {
   ElMessage.success('AI结果已添加到变量数据')
 }
 
+const triggerFileUpload = () => {
+  fileInput.value?.click()
+}
+
+const handleFileUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  try {
+    const response = await api.post('/data/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    
+    const excelData = response.data
+    if (excelData && excelData.length > 1) {
+      // 第一行是字段名，第二行是数据
+      const headers = excelData[0]
+      const values = excelData[1]
+      
+      // 将Excel数据映射到变量数据
+      headers.forEach((header, index) => {
+        if (templateVariables.value.includes(header) && values[index]) {
+          variableData.value[header] = values[index]
+        }
+      })
+      
+      ElMessage.success('Excel数据导入成功')
+    } else {
+      ElMessage.warning('Excel文件格式不正确，请确保第一行为字段名，第二行为数据')
+    }
+  } catch (error) {
+    console.error('Excel导入失败:', error)
+    ElMessage.error('Excel导入失败，请检查文件格式')
+  }
+  
+  // 清空文件输入
+  event.target.value = ''
+}
+
+const triggerJsonUpload = () => {
+  jsonInput.value?.click()
+}
+
+const handleJsonUpload = (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const jsonData = JSON.parse(e.target.result)
+      
+      // 将JSON数据映射到变量数据
+      Object.keys(jsonData).forEach(key => {
+        if (templateVariables.value.includes(key)) {
+          variableData.value[key] = jsonData[key]
+        }
+      })
+      
+      ElMessage.success('JSON数据导入成功')
+    } catch (error) {
+      console.error('JSON解析失败:', error)
+      ElMessage.error('JSON文件格式错误，请检查文件内容')
+    }
+  }
+  
+  reader.readAsText(file)
+  // 清空文件输入
+  event.target.value = ''
+}
+
 onMounted(async () => {
   try {
     await loadTemplates()
@@ -376,42 +484,173 @@ onMounted(async () => {
 
 <style scoped>
 .preview {
-  padding: 20px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
 }
 
-.preview-toolbar {
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid var(--el-border-color);
-}
-
-.email-preview {
-  border: 1px solid var(--el-border-color);
-  border-radius: 6px;
+:deep(.el-card) {
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border: none;
   overflow: hidden;
 }
 
+:deep(.el-card__header) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 18px;
+  padding: 20px 24px;
+  border-bottom: none;
+}
+
+:deep(.el-card__body) {
+  padding: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.preview-toolbar {
+  margin-bottom: 24px;
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.template-selector {
+  flex: 1;
+  max-width: 400px;
+}
+
+.selector-label {
+  display: block;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.template-select {
+  width: 100%;
+}
+
+:deep(.template-select .el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+:deep(.template-select .el-input__wrapper:hover) {
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.template-select .el-input__wrapper.is-focus) {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+.template-option-content {
+  padding: 4px 0;
+}
+
+.template-name {
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  margin-bottom: 2px;
+}
+
+.template-subject {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+:deep(.action-buttons .el-button) {
+  border-radius: 10px;
+  font-weight: 500;
+  padding: 12px 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+:deep(.action-buttons .el-button:hover) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+:deep(.action-buttons .el-button--primary) {
+  background: rgba(64, 158, 255, 0.8);
+  border-color: rgba(64, 158, 255, 0.6);
+}
+
+:deep(.action-buttons .el-button--primary:hover) {
+  background: rgba(64, 158, 255, 1);
+  border-color: rgba(64, 158, 255, 0.8);
+}
+
+.email-preview {
+  margin: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  background: white;
+}
+
 .email-header {
-  background: var(--el-bg-color-page);
-  padding: 15px;
-  border-bottom: 1px solid var(--el-border-color);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .email-field {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+
+.email-field:last-child {
+  margin-bottom: 0;
 }
 
 .email-field label {
-  font-weight: bold;
-  width: 80px;
-  color: var(--el-text-color-regular);
+  font-weight: 600;
+  width: 100px;
+  color: #495057;
+  font-size: 14px;
 }
 
 .subject {
-  font-weight: bold;
-  color: var(--el-text-color-primary);
+  font-weight: 600;
+  color: #212529;
+  font-size: 16px;
 }
 
 .email-body {
@@ -422,21 +661,92 @@ onMounted(async () => {
   min-height: 400px;
 }
 
+:deep(.content-tabs .el-tabs__header) {
+  margin: 0;
+  padding: 0 24px;
+  background: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+:deep(.content-tabs .el-tabs__nav-wrap) {
+  padding: 12px 0;
+}
+
+:deep(.content-tabs .el-tabs__item) {
+  font-weight: 500;
+  color: #6c757d;
+  border-radius: 8px 8px 0 0;
+  margin-right: 4px;
+}
+
+:deep(.content-tabs .el-tabs__item.is-active) {
+  color: #495057;
+  background: white;
+  border-bottom-color: white;
+}
+
 .email-content {
-  padding: 20px;
+  padding: 24px;
   line-height: 1.6;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: white;
 }
 
 .data-templates {
-  margin-top: 20px;
-  padding-top: 15px;
-  border-top: 1px solid var(--el-border-color);
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.data-templates h4 {
+  margin: 0 0 12px 0;
+  color: #495057;
+  font-weight: 600;
 }
 
 .ai-result {
-  margin-top: 20px;
-  padding-top: 15px;
-  border-top: 1px solid var(--el-border-color);
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.ai-result h4 {
+  margin: 0 0 12px 0;
+  color: #495057;
+  font-weight: 600;
+}
+
+:deep(.el-dialog) {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+:deep(.el-dialog__header) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px 24px;
+  margin: 0;
+}
+
+:deep(.el-dialog__title) {
+  color: white;
+  font-weight: 600;
+}
+
+:deep(.el-dialog__headerbtn .el-dialog__close) {
+  color: white;
+}
+
+:deep(.el-dialog__headerbtn) {
+  display: none;
+}
+
+:deep(.el-dialog__body) {
+  padding: 24px;
+}
+
+:deep(.el-dialog__footer) {
+  padding: 16px 24px 24px;
+  background: #f8f9fa;
 }
 </style>

@@ -230,56 +230,82 @@ onUnmounted(() => {
 
 <style scoped>
 .dashboard {
-  padding: 20px;
+  padding: 24px;
+  background: transparent;
 }
 
 .stats-row {
-  margin-bottom: 20px;
+  margin-bottom: 32px;
 }
 
 .stat-card {
-  height: 120px;
+  height: 140px;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
 }
 
 .stat-content {
   display: flex;
   align-items: center;
   height: 100%;
+  padding: 20px;
 }
 
 .stat-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 15px;
-  font-size: 24px;
+  margin-right: 20px;
+  font-size: 28px;
   color: white;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-.stat-icon.template { background: #409eff; }
-.stat-icon.pending { background: #e6a23c; }
-.stat-icon.success { background: #67c23a; }
-.stat-icon.failed { background: #f56c6c; }
+.stat-icon.template { 
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.stat-icon.pending { 
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+}
+.stat-icon.success { 
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+}
+.stat-icon.failed { 
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+}
 
 .stat-number {
-  font-size: 28px;
-  font-weight: bold;
-  color: var(--el-text-color-primary);
+  font-size: 32px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1;
 }
 
 .stat-label {
-  color: var(--el-text-color-regular);
-  margin-top: 5px;
+  color: #64748b;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .charts-row {
-  margin-bottom: 20px;
+  margin-bottom: 32px;
 }
 
 .tasks-card {
-  margin-top: 20px;
+  margin-top: 32px;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px);
 }
 </style>

@@ -1,0 +1,142 @@
+/* 全局样式 */
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --success-gradient: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  --warning-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  --danger-gradient: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 按钮增强 */
+.el-button--primary {
+  background: var(--primary-gradient) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: all 0.3s ease !important;
+}
+
+.el-button--primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.el-button--success {
+  background: var(--success-gradient) !important;
+  border: none !important;
+}
+
+.el-button--warning {
+  background: var(--warning-gradient) !important;
+  border: none !important;
+}
+
+.el-button--danger {
+  background: var(--danger-gradient) !important;
+  border: none !important;
+}
+
+/* 卡片增强 */
+.el-card {
+  border: none !important;
+  box-shadow: var(--shadow-md) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+.el-card__header {
+  background: var(--primary-gradient) !important;
+  color: white !important;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 20px !important;
+}
+
+/* 表格增强 */
+.el-table {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: var(--shadow-md) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+.el-table th {
+  background: #f8fafc !important;
+  font-weight: 600 !important;
+}
+
+.el-table__row:hover {
+  background: #f8fafc !important;
+}
+
+/* 输入框增强 */
+.el-input__wrapper {
+  border-radius: 8px !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: all 0.3s ease !important;
+}
+
+.el-input__wrapper:hover {
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* 标签增强 */
+.el-tag {
+  border-radius: 6px !important;
+  border: none !important;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%) !important;
+  color: #3730a3 !important;
+  font-weight: 500 !important;
+}
+
+/* 对话框增强 */
+.el-dialog {
+  border-radius: 16px !important;
+  box-shadow: var(--shadow-xl) !important;
+}
+
+.el-dialog__header {
+  background: var(--primary-gradient) !important;
+  color: white !important;
+  border-radius: 16px 16px 0 0 !important;
+  padding: 24px !important;
+}
+
+.el-dialog__title {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* 分页增强 */
+.el-pagination {
+  background: rgba(255, 255, 255, 0.95) !important;
+  padding: 16px !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
