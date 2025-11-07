@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"go_market_email/internal/handlers"
 	"go_market_email/internal/middleware"
@@ -12,8 +13,12 @@ import (
 )
 
 func main() {
+	// 解析命令行参数
+	configPath := flag.String("c", "./configs/config.yaml", "配置文件路径")
+	flag.Parse()
+	
 	// 加载配置
-	config, err := utils.LoadConfig("./configs/config.yaml")
+	config, err := utils.LoadConfig(*configPath)
 	if err != nil {
 		log.Fatal("加载配置失败:", err)
 	}
@@ -62,7 +67,7 @@ func main() {
 	
 	// 需要认证的路由
 	api := r.Group("/api/v1")
-	api.Use(middleware.AuthMiddleware(config.Auth))
+	api.Use(middleware.AuthMiddleware(config.Auth, logger))
 	
 	// 创建处理器
 	statsHandler := handlers.NewStatsHandler(db, rdb, logger, emailService)
@@ -123,6 +128,22 @@ func main() {
 	
 	// WebSocket路由
 	r.GET("/ws/stats", statsHandler.WebSocketStats)
+	
+	// 记录配置信息到日志
+	logger.Info("配置文件加载完成", zap.String("config_path", *configPath))
+	logger.Info("SMTP配置",
+		zap.String("smtp_host", config.SMTP.Host),
+		zap.Int("smtp_port", config.SMTP.Port),
+		zap.String("smtp_username", config.SMTP.Username),
+		zap.String("smtp_from_name", config.SMTP.FromName),
+		zap.Bool("has_password", config.SMTP.Password != ""))
+	logger.Info("数据库配置",
+		zap.String("db_host", config.Database.Host),
+		zap.Int("db_port", config.Database.Port),
+		zap.String("db_name", config.Database.DBName))
+	logger.Info("Redis配置",
+		zap.String("redis_host", config.Redis.Host),
+		zap.Int("redis_port", config.Redis.Port))
 	
 	// 启动服务器
 	logger.Info("服务器启动", zap.String("port", config.Server.Port))

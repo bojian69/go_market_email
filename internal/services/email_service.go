@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -34,12 +35,27 @@ func NewEmailService(db *gorm.DB, rdb *redis.Client, config utils.Config, logger
 	}
 }
 
+// GetLogger 获取日志器
+func (s *EmailService) GetLogger() *zap.Logger {
+	return s.logger
+}
+
 // SendSingleEmail 发送单封邮件
 func (s *EmailService) SendSingleEmail(to, subject, content string) error {
 	// 验证邮件地址格式
 	if to == "" {
 		return fmt.Errorf("收件人邮箱不能为空")
 	}
+	
+	// 调试日志：输出SMTP配置
+	fmt.Printf("[DEBUG] SMTP配置: Host=%s, Port=%d, Username=%s, FromName=%s, HasPassword=%t\n", 
+		s.config.SMTP.Host, s.config.SMTP.Port, s.config.SMTP.Username, s.config.SMTP.FromName, s.config.SMTP.Password != "")
+	s.logger.Info("SMTP配置检查",
+		zap.String("smtp_host", s.config.SMTP.Host),
+		zap.Int("smtp_port", s.config.SMTP.Port),
+		zap.String("smtp_username", s.config.SMTP.Username),
+		zap.String("smtp_from_name", s.config.SMTP.FromName),
+		zap.Bool("has_password", s.config.SMTP.Password != ""))
 	
 	// 验证发件人配置
 	if s.config.SMTP.Username == "" {
@@ -52,10 +68,95 @@ func (s *EmailService) SendSingleEmail(to, subject, content string) error {
 	e.Subject = subject
 	e.HTML = []byte(content)
 	
-	auth := smtp.PlainAuth("", s.config.SMTP.Username, s.config.SMTP.Password, s.config.SMTP.Host)
 	addr := fmt.Sprintf("%s:%d", s.config.SMTP.Host, s.config.SMTP.Port)
 	
-	return e.Send(addr, auth)
+	// 记录发送尝试
+	s.logger.Info("尝试发送邮件",
+		zap.String("to", to),
+		zap.String("subject", subject),
+		zap.String("smtp_host", s.config.SMTP.Host),
+		zap.Int("smtp_port", s.config.SMTP.Port),
+		zap.String("smtp_username", s.config.SMTP.Username))
+	
+	// 配置TLS
+	tlsConfig := &tls.Config{
+		ServerName: s.config.SMTP.Host,
+	}
+	
+	// 使用STARTTLS发送邮件
+	err := e.SendWithStartTLS(addr, smtp.PlainAuth("", s.config.SMTP.Username, s.config.SMTP.Password, s.config.SMTP.Host), tlsConfig)
+	if err != nil {
+		s.logger.Error("邮件发送失败",
+			zap.String("to", to),
+			zap.String("smtp_addr", addr),
+			zap.Error(err))
+	} else {
+		s.logger.Info("邮件发送成功",
+			zap.String("to", to),
+			zap.String("subject", subject))
+	}
+	
+	return err
+}
+
+// SendSingleEmailWithAttachments 发送带附件的单封邮件
+func (s *EmailService) SendSingleEmailWithAttachments(to, subject, content string, attachments []string) error {
+	// 验证邮件地址格式
+	if to == "" {
+		return fmt.Errorf("收件人邮箱不能为空")
+	}
+	
+	// 验证发件人配置
+	if s.config.SMTP.Username == "" {
+		return fmt.Errorf("SMTP用户名未配置")
+	}
+	
+	e := email.NewEmail()
+	e.From = s.config.SMTP.Username
+	e.To = []string{to}
+	e.Subject = subject
+	e.HTML = []byte(content)
+	
+	// 添加附件
+	for _, attachment := range attachments {
+		if attachment != "" {
+			if _, err := e.AttachFile(attachment); err != nil {
+				s.logger.Error("附件添加失败", zap.String("file", attachment), zap.Error(err))
+				continue
+			}
+		}
+	}
+	
+	addr := fmt.Sprintf("%s:%d", s.config.SMTP.Host, s.config.SMTP.Port)
+	
+	// 记录发送尝试
+	s.logger.Info("尝试发送邮件",
+		zap.String("to", to),
+		zap.String("subject", subject),
+		zap.String("smtp_host", s.config.SMTP.Host),
+		zap.Int("smtp_port", s.config.SMTP.Port),
+		zap.String("smtp_username", s.config.SMTP.Username),
+		zap.Int("attachments_count", len(attachments)))
+	
+	// 配置TLS
+	tlsConfig := &tls.Config{
+		ServerName: s.config.SMTP.Host,
+	}
+	
+	// 使用STARTTLS发送邮件
+	err := e.SendWithStartTLS(addr, smtp.PlainAuth("", s.config.SMTP.Username, s.config.SMTP.Password, s.config.SMTP.Host), tlsConfig)
+	if err != nil {
+		s.logger.Error("邮件发送失败",
+			zap.String("to", to),
+			zap.String("smtp_addr", addr),
+			zap.Error(err))
+	} else {
+		s.logger.Info("邮件发送成功",
+			zap.String("to", to),
+			zap.String("subject", subject))
+	}
+	
+	return err
 }
 
 // QueueEmailTask 将邮件任务加入队列

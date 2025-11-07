@@ -29,12 +29,12 @@ build:
 # 运行开发服务器
 run:
 	@echo "🚀 启动开发服务器..."
-	@go run cmd/server/main.go -c configs/config.yaml
+	@go run cmd/server/main.go -c configs/config.local.yaml
 
 # 运行CLI工具
 worker:
 	@echo "🔄 启动邮件发送工作进程..."
-	@go run cmd/cli/main.go worker -c configs/config.yaml
+	@go run cmd/cli/main.go worker -c configs/config.local.yaml
 
 # 运行测试
 test:

@@ -1,10 +1,14 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"go_market_email/internal/models"
 	"go_market_email/internal/services"
 )
@@ -28,30 +32,87 @@ func NewEmailHandler(emailService *services.EmailService, templateService *servi
 
 // SendTestEmail 发送测试邮件
 func (h *EmailHandler) SendTestEmail(c *gin.Context) {
-	var request struct {
-		TemplateID uint                   `json:"template_id" binding:"required"`
-		Email      string                 `json:"email" binding:"required,email"`
-		Data       map[string]interface{} `json:"data"`
-	}
+	// 记录请求信息
+	h.emailService.GetLogger().Info("收到测试邮件请求",
+		zap.String("method", c.Request.Method),
+		zap.String("content_type", c.GetHeader("Content-Type")),
+		zap.String("user_agent", c.GetHeader("User-Agent")))
 	
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// 解析表单数据
+	templateIDStr := c.PostForm("template_id")
+	email := c.PostForm("email")
+	dataStr := c.PostForm("data")
+	
+	// 记录解析的参数
+	h.emailService.GetLogger().Info("解析请求参数",
+		zap.String("template_id", templateIDStr),
+		zap.String("email", email),
+		zap.String("data", dataStr))
+	
+	if templateIDStr == "" || templateIDStr == "null" || email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "模板ID和邮箱地址不能为空"})
 		return
 	}
 	
+	templateID, err := strconv.ParseUint(templateIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("无效的模板ID: %s", templateIDStr)})
+		return
+	}
+	
+	// 解析变量数据
+	var data map[string]interface{}
+	if dataStr != "" {
+		if err := json.Unmarshal([]byte(dataStr), &data); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "变量数据格式错误"})
+			return
+		}
+	}
+	
 	// 获取模板
-	template, err := h.templateService.GetTemplate(request.TemplateID)
+	template, err := h.templateService.GetTemplate(uint(templateID))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "模板不存在"})
 		return
 	}
 	
 	// 替换变量
-	subject := h.templateService.ReplaceVariables(template.Subject, request.Data)
-	content := h.templateService.ReplaceVariables(template.Content, request.Data)
+	subject := h.templateService.ReplaceVariables(template.Subject, data)
+	content := h.templateService.ReplaceVariables(template.Content, data)
+	
+	// 处理附件
+	form, err := c.MultipartForm()
+	var attachments []string
+	if err == nil && form.File["attachments"] != nil {
+		// 确保临时目录存在
+		os.MkdirAll("./temp", 0755)
+		
+		for _, file := range form.File["attachments"] {
+			// 保存附件到临时目录
+			dst := "./temp/" + file.Filename
+			if err := c.SaveUploadedFile(file, dst); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "保存附件失败"})
+				return
+			}
+			attachments = append(attachments, dst)
+		}
+		
+		// 发送完成后清理临时文件
+		defer func() {
+			for _, attachment := range attachments {
+				os.Remove(attachment)
+			}
+		}()
+	}
 	
 	// 发送邮件
-	if err := h.emailService.SendSingleEmail(request.Email, subject, content); err != nil {
+	if err := h.emailService.SendSingleEmailWithAttachments(email, subject, content, attachments); err != nil {
+		// 记录详细错误信息
+		h.emailService.GetLogger().Error("测试邮件发送失败",
+			zap.String("email", email),
+			zap.String("subject", subject),
+			zap.Strings("attachments", attachments),
+			zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -56,6 +56,21 @@
               <label>主题：</label>
               <span class="subject">{{ renderedSubject }}</span>
             </div>
+            <div class="email-field">
+              <label>附件：</label>
+              <div class="attachment-section">
+                <el-upload
+                  ref="uploadRef"
+                  :file-list="attachments"
+                  :auto-upload="false"
+                  multiple
+                  :on-change="handleAttachmentChange"
+                  :on-remove="handleAttachmentRemove"
+                >
+                  <el-button size="small">选择附件</el-button>
+                </el-upload>
+              </div>
+            </div>
           </div>
           
           <div class="email-body">
@@ -216,6 +231,8 @@ const aiLoading = ref(false)
 const aiResult = ref('')
 const fileInput = ref(null)
 const jsonInput = ref(null)
+const uploadRef = ref(null)
+const attachments = ref([])
 
 const previewForm = ref({
   template_id: null,
@@ -344,21 +361,34 @@ const sendTestEmail = async () => {
     return
   }
   
-  if (!currentTemplate.value) {
+  if (!previewForm.value.template_id || !currentTemplate.value) {
     ElMessage.warning('请选择邮件模板')
     return
   }
   
   sending.value = true
   try {
-    await api.post('/emails/test', {
-      template_id: previewForm.value.template_id,
-      email: previewForm.value.test_email,
-      data: variableData.value
+    const formData = new FormData()
+    formData.append('template_id', String(previewForm.value.template_id || ''))
+    formData.append('email', previewForm.value.test_email)
+    formData.append('data', JSON.stringify(variableData.value))
+    
+    // 添加附件
+    attachments.value.forEach((attachment, index) => {
+      if (attachment.raw) {
+        formData.append('attachments', attachment.raw)
+      }
+    })
+    
+    await api.post('/emails/test', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     })
     ElMessage.success('测试邮件发送成功')
   } catch (error) {
     console.error('发送测试邮件失败:', error)
+    ElMessage.error('发送失败，请检查网络连接')
   } finally {
     sending.value = false
   }
@@ -466,6 +496,14 @@ const handleJsonUpload = (event) => {
   reader.readAsText(file)
   // 清空文件输入
   event.target.value = ''
+}
+
+const handleAttachmentChange = (file, fileList) => {
+  attachments.value = fileList
+}
+
+const handleAttachmentRemove = (file, fileList) => {
+  attachments.value = fileList
 }
 
 onMounted(async () => {
@@ -645,6 +683,18 @@ onMounted(async () => {
   width: 100px;
   color: #495057;
   font-size: 14px;
+}
+
+.attachment-section {
+  flex: 1;
+}
+
+:deep(.attachment-section .el-upload-list) {
+  margin-top: 8px;
+}
+
+:deep(.attachment-section .el-upload-list__item) {
+  margin-bottom: 4px;
 }
 
 .subject {
